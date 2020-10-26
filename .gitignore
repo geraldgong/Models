@@ -1,0 +1,7 @@
+Data/
+.ipynb_checkpoints
+conda-env-models/
+.idea/
+__pycache__
+.git/s
+.DS_Store

@@ -1,0 +1,1 @@
+pipdeptree -f --warn silence | grep -v '[[:space:]]' > requirements.txt
