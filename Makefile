@@ -11,10 +11,10 @@ help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 ###################
-# Conda Enviroment
+# Conda Environment
 ###################
 
-PY_VERSION := 3.7
+PY_VERSION := 3.8
 CONDA_ENV_NAME ?= conda-env-models
 ACTIVATE_ENV = source activate ./$(CONDA_ENV_NAME)
 
