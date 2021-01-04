@@ -8,7 +8,7 @@ from tensorflow.keras import Model
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 
-class CNN:
+class CNN_multiply:
     def __init__(self):
         self.training_images, self.training_labels = self.load_data_from_csv(f"../Data/MNIST/mnist_train.csv", 28)
         self.testing_images, self.testing_labels = self.load_data_from_csv(f"../Data/MNIST/mnist_test.csv", 28)
@@ -100,6 +100,6 @@ class myCallback(tf.keras.callbacks.Callback):
 
 
 if __name__ == "__main__":
-    cnn = CNN()
+    cnn = CNN_multiply()
     cnn.build_model(num_classes=25)
     cnn.train_model()
