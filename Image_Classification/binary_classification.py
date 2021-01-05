@@ -68,8 +68,8 @@ class CNN_binary:
         history = self.model.fit_generator(
             # Your Code Here
             train_generator,
-            steps_per_epoch=3,
-            epochs=25,
+            steps_per_epoch=5,
+            epochs=30,
             callbacks=[callbacks]
         )
 
