@@ -8,13 +8,27 @@ from tensorflow.keras import Model
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 
+class myCallback(tf.keras.callbacks.Callback):
+    """
+    Define a Callback class that stops training once accuracy reaches 97.0%
+    """
+
+    def on_epoch_end(self, epoch, logs={}):
+        if logs.get('acc') >= 0.95:
+            print("\nReached 95.0% accuracy so cancelling training!")
+            self.model.stop_training = True
+
+
 class CNN_multiply:
     def __init__(self):
-        self.training_images, self.training_labels = self.load_data_from_csv(f"../Data/MNIST/mnist_train.csv", 28)
-        self.testing_images, self.testing_labels = self.load_data_from_csv(f"../Data/MNIST/mnist_test.csv", 28)
+        self.data_path = f"{os.getcwd()}/../Data/"
+        self.width = 28
+        self.height = 28
+        self.channel = 3
+        self.training_images, self.training_labels = self.load_data_from_csv(self.data_path + "MNIST/mnist_train.csv")
+        self.testing_images, self.testing_labels = self.load_data_from_csv(self.data_path + "MNIST/mnist_test.csv")
 
-    @staticmethod
-    def load_data_from_csv(filename, image_width):
+    def load_data_from_csv(self, filename):
         """
         Load images and labels from csv file
         """
@@ -23,7 +37,7 @@ class CNN_multiply:
             for line in training_file.readlines()[1:]:
                 line = line.strip().split(',')
                 labels.append(line[0])
-                images.append(np.array(line[1:]).astype(int).reshape(image_width, -1))
+                images.append(np.array(line[1:]).astype(int).reshape(self.width, -1))
 
             labels = np.array(labels).astype(int)
             images = np.array(images)
@@ -42,7 +56,7 @@ class CNN_multiply:
                                            zoom_range=0.2,
                                            horizontal_flip=True)
 
-        train_generator = train_datagen.flow(self.training_images, self.training_labels)
+        train_generator = train_datagen.flow(self.training_images, self.training_labels, batch_size=128)
         validation_datagen = ImageDataGenerator(rescale=1. / 255)
         validation_generator = validation_datagen.flow(self.testing_images, self.testing_labels)
 
@@ -57,8 +71,6 @@ class CNN_multiply:
                                    activation='relu',
                                    input_shape=(28, 28, 1)),
             tf.keras.layers.MaxPooling2D(2, 2),
-            tf.keras.layers.Conv2D(64, (3, 3), activation='relu'),
-            tf.keras.layers.MaxPooling2D(2, 2),
             tf.keras.layers.Conv2D(128, (3, 3), activation='relu'),
             tf.keras.layers.MaxPooling2D(2, 2),
             tf.keras.layers.Flatten(),
@@ -69,7 +81,7 @@ class CNN_multiply:
         # Compile Model.
         self.model.compile(loss='sparse_categorical_crossentropy',
                            optimizer='adam',
-                           metrics=['accuracy'])
+                           metrics=['acc'])
 
     def train_model(self, save_model=True):
         """
@@ -79,24 +91,13 @@ class CNN_multiply:
         callbacks = myCallback()
         history = self.model.fit(
             train_generator,
-            epochs=100,
+            epochs=200,
             callbacks=[callbacks],
             validation_data=validation_generator)
 
         if save_model:
             self.model.save("CNN_multi_classify.h5")
             print(f"Model saved")
-
-
-class myCallback(tf.keras.callbacks.Callback):
-    """
-    Define a Callback class that stops training once accuracy reaches 97.0%
-    """
-
-    def on_epoch_end(self, epoch, logs={}):
-        if logs.get('accuracy') >= 0.97:
-            print("\nReached 97.0% accuracy so cancelling training!")
-            self.model.stop_training = True
 
 
 if __name__ == "__main__":

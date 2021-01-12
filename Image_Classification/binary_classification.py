@@ -1,6 +1,6 @@
 import tensorflow as tf
 import zipfile
-from os import getcwd
+import os
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.optimizers import RMSprop
 
@@ -19,7 +19,7 @@ class myCallback(tf.keras.callbacks.Callback):
 
 class CNN_binary:
     def __init__(self):
-        self.data_path = f"{getcwd()}/../Data/"
+        self.data_path = f"{os.getcwd()}/../Data/"
         self.width = 150
         self.height = 150
         self.channel = 3

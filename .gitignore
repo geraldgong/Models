@@ -5,3 +5,4 @@ conda-env-models/
 __pycache__
 .git/s
 .DS_Store
+*.h5
