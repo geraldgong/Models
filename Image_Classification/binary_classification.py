@@ -5,19 +5,7 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.optimizers import RMSprop
 
 
-class myCallback(tf.keras.callbacks.Callback):
-    """
-    Cancels training upon hitting training accuracy of >.999
-    """
-
-    def on_epoch_end(self, epoch, logs={}):
-        DESIRED_ACCURACY = 0.999
-        if logs.get('accuracy') > DESIRED_ACCURACY:
-            print('\nDesired accuracy achieved!')
-            self.model.stop_training = True
-
-
-class CNN_binary:
+class BinaryCNN:
     def __init__(self):
         self.data_path = f"{os.getcwd()}/../Data/"
         self.width = 150
@@ -80,8 +68,20 @@ class CNN_binary:
         return history.history['accuracy'][-1]
 
 
+class myCallback(tf.keras.callbacks.Callback):
+    """
+    Cancels training upon hitting training accuracy of >.999
+    """
+
+    def on_epoch_end(self, epoch, logs={}):
+        DESIRED_ACCURACY = 0.999
+        if logs.get('accuracy') > DESIRED_ACCURACY:
+            print('\nDesired accuracy achieved!')
+            self.model.stop_training = True
+
+
 if __name__ == "__main__":
-    cnn_bi = CNN_binary()
-    cnn_bi.unzip_data('happy-or-sad.zip', 'h-or-s')
-    cnn_bi.build_model()
-    cnn_bi.train_model()
+    cnn = BinaryCNN()
+    cnn.unzip_data('happy-or-sad.zip', 'h-or-s')
+    cnn.build_model()
+    cnn.train_model()

@@ -1,25 +1,10 @@
-import csv
 import numpy as np
 import os
-import sys
 import tensorflow as tf
-from tensorflow.keras import layers
-from tensorflow.keras import Model
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 
-class myCallback(tf.keras.callbacks.Callback):
-    """
-    Define a Callback class that stops training once accuracy reaches 97.0%
-    """
-
-    def on_epoch_end(self, epoch, logs={}):
-        if logs.get('acc') >= 0.95:
-            print("\nReached 95.0% accuracy so cancelling training!")
-            self.model.stop_training = True
-
-
-class CNN_multiply:
+class MultiplyCNN:
     def __init__(self):
         self.data_path = f"{os.getcwd()}/../Data/"
         self.width = 28
@@ -100,7 +85,18 @@ class CNN_multiply:
             print(f"Model saved")
 
 
+class myCallback(tf.keras.callbacks.Callback):
+    """
+    Define a Callback class that stops training once accuracy reaches 97.0%
+    """
+
+    def on_epoch_end(self, epoch, logs={}):
+        if logs.get('acc') >= 0.95:
+            print("\nReached 95.0% accuracy so cancelling training!")
+            self.model.stop_training = True
+
+
 if __name__ == "__main__":
-    cnn = CNN_multiply()
+    cnn = MultiplyCNN()
     cnn.build_model(num_classes=25)
     cnn.train_model()
