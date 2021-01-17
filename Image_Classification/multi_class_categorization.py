@@ -84,6 +84,8 @@ class MultiplyCNN:
             self.model.save("CNN_multi_classify.h5")
             print(f"Model saved")
 
+        return history
+
 
 class myCallback(tf.keras.callbacks.Callback):
     """

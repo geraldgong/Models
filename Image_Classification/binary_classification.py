@@ -84,4 +84,4 @@ if __name__ == "__main__":
     cnn = BinaryCNN()
     cnn.unzip_data('happy-or-sad.zip', 'h-or-s')
     cnn.build_model()
-    cnn.train_model()
+    _ = cnn.train_model()
