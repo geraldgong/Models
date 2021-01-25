@@ -72,7 +72,8 @@ class NLPClassify:
         test_labels = self.labels[0:split]
         training_labels = self.labels[split:training_size]
 
-        train_ds = tf.data.Dataset.from_tensor_slices((training_sequences, training_labels)).batch(self.batch_size)
+        train_ds = tf.data.Dataset.from_tensor_slices((training_sequences, training_labels)).shuffle(1000).batch(
+            self.batch_size)
         test_ds = tf.data.Dataset.from_tensor_slices((test_sequences, test_labels)).batch(self.batch_size)
 
         return train_ds, test_ds
