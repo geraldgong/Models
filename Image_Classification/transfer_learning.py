@@ -1,9 +1,7 @@
 import tensorflow as tf
 from tensorflow.keras import layers
 import tensorflow_datasets as tfds
-from tensorflow import keras
 from tensorflow.keras import Model
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.applications.inception_v3 import InceptionV3
 from tensorflow.keras.optimizers import RMSprop
 
@@ -18,43 +16,49 @@ class BinaryTransfer:
                                              include_top=False,
                                              weights='imagenet')
 
-        self.train_ds, self.val_ds = self.load_data()
+        self.train_ds, self.val_ds, self.info = self.load_data()
 
-    def load_data(self):
+    @staticmethod
+    def load_data():
         # Horse and humans from tensorflow_datasets
-        (train_ds, val_ds), self.info = tfds.load(name='horses_or_humans',
-                                                  split=['train', 'test'],
-                                                  shuffle_files=True,
-                                                  with_info=True,
-                                                  as_supervised=True)
+        (train_ds, val_ds), info = tfds.load(name='horses_or_humans',
+                                             split=['train', 'test'],
+                                             shuffle_files=True,
+                                             with_info=True,
+                                             as_supervised=True)
 
-        train_ds = (train_ds
-                    .shuffle(1000)
-                    .map(self.image_augmentation_train, num_parallel_calls=tf.data.experimental.AUTOTUNE)
-                    .batch(self.batch_size)
-                    .prefetch(1)
-                    )
+        return train_ds, val_ds, info
 
-        val_ds = val_ds.map(self.image_augmentation_valid).batch(self.batch_size).prefetch(1)
+    def preprocess_data(self, ds, shuffle=False, augment=False):
 
-        return train_ds, val_ds
+        resize_and_rescale = tf.keras.Sequential([
+            layers.experimental.preprocessing.Resizing(self.width, self.height),
+            layers.experimental.preprocessing.Rescaling(1. / 255)
+        ])
 
-    def image_augmentation_train(self, image, label):
-        image = tf.image.resize(image, [self.width, self.height])
-        image = (image / 255.0)
-        image = tf.image.rot90(image)
-        image = tf.image.flip_left_right(image)
-        image = tf.image.random_crop(image, [self.width, self.height, self.channel])
-        final_image = keras.applications.xception.preprocess_input(image)
-        return final_image, label
+        data_augmentation = tf.keras.Sequential([
+            layers.experimental.preprocessing.RandomFlip("horizontal"),
+            layers.experimental.preprocessing.RandomRotation(0.4),
+            layers.experimental.preprocessing.RandomTranslation(height_factor=(-0.2, 0.2), width_factor=(-0.2, 0.2)),
+            layers.experimental.preprocessing.RandomZoom(0.2, 0.2),
+        ])
 
-    def image_augmentation_valid(self, image, label):
-        image = tf.image.resize(image, [self.width, self.height])
-        image = (image / 255.0)
-        final_image = keras.applications.xception.preprocess_input(image)
-        return final_image, label
+        # Resize and rescale all datasets
+        ds = ds.map(lambda x, y: (resize_and_rescale(x), y))
+        if shuffle:
+            ds = ds.shuffle(1000)
 
-    def transfer_model(self):
+        # Batch all datasets
+        ds = ds.batch(self.batch_size)
+
+        # Use data augmentation only on the training set
+        if augment:
+            ds = ds.map(lambda x, y: (data_augmentation(x, training=True), y))
+
+        # Prefecting on all datasets
+        return ds.prefetch(1)
+
+    def build_model(self):
         """
         Build model with transfer learning
         """
@@ -80,12 +84,12 @@ class BinaryTransfer:
                            loss='binary_crossentropy',
                            metrics=['accuracy'])
 
-    def train_model(self, save_model=True):
+    def train_model(self, train_ds, val_ds, save_model=True):
         callbacks = myCallback()
-        history = self.model.fit(self.train_ds,
+        history = self.model.fit(train_ds,
                                  epochs=200,
                                  callbacks=[callbacks],
-                                 validation_data=self.val_ds)
+                                 validation_data=val_ds)
 
         if save_model:
             self.model.save("Transfer_binary_classify.h5")
@@ -109,5 +113,9 @@ if __name__ == "__main__":
     physical_devices = tf.config.list_physical_devices('GPU')
     print("Num GPUs:", len(physical_devices))
     trans_model = BinaryTransfer()
-    trans_model.transfer_model()
-    _ = trans_model.train_model()
+    # Image augumentation on training data
+    aug_train_ds = trans_model.preprocess_data(trans_model.train_ds, shuffle=True, augment=True)
+    aug_val_ds = trans_model.preprocess_data(trans_model.val_ds, shuffle=True)
+
+    trans_model.build_model()
+    _ = trans_model.train_model(aug_train_ds, aug_val_ds)
