@@ -1,4 +1,3 @@
-import json
 import tensorflow as tf
 import csv
 import random
